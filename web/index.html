@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang='en'>
+ 
+    <head> 
+        
+        <title>Puntos Dinámicos</title> 
+        <meta charset="UTF-8">
+		        <script src='http://maps.google.com/maps/api/js?sensor=false'></script>
+                        <script type='text/javascript' src='OpenLayer/OpenLayers.js'></script>
+                        <script type='text/javascript' src='Css/EstiloMap.css'></script>
+                        <script type="text/javascript"> 
+            var map, vectorLayer, controls, drawPoint, wmsEjes, wmsCentrosEducativos, selecthover;
+            function init(){
+                var google_satellite = new OpenLayers.Layer.Google("Google Satellite",{type: google.maps.MapTypeId.SATELLITE});
+                var proj_900913 = new OpenLayers.Projection('EPSG:900913');
+                var proj_4326 = new OpenLayers.Projection('EPSG:4326');
+                var posicion = new OpenLayers.LonLat(-56.71361, -34.3375);
+                posicion.transform(proj_4326, proj_900913);
+                map = new OpenLayers.Map('map', {projection: proj_900913 ,displayProjection: proj_4326});
+                wmsEjes = new OpenLayers.Layer.WMS('Ejes de calles','http://localhost:8080/geoserver/wms/',{layers: 'Ejes'},{});
+                wmsCentrosEducativos = new OpenLayers.Layer.WMS('Centros educativos','http://localhost:8080/geoserver/wms/',{layers: 'CentroEducativo'},{});
+    
+                vectorLayer = new OpenLayers.Layer.Vector("Points", {});
+                
+                selecthover = new OpenLayers.Control.SelectFeature(vectorLayer,{
+                                                            multiple: false, hover: true,
+                                                            toggleKey: "ctrlKey", // ctrl key removes from selection
+                                                            multipleKey: "shiftKey" // shift key adds to selection
+                                                                });    
+                                                                                                              
+                map.addLayers([google_satellite, wmsEjes, wmsCentrosEducativos, vectorLayer]);
+                map.addControls([new OpenLayers.Control.LayerSwitcher(), 
+                                new OpenLayers.Control.MousePosition(), 
+                            selecthover]);
+  
+                drawPoint=new OpenLayers.Control.DrawFeature(vectorLayer,OpenLayers.Handler.Point);
+				drawPoint.featureAdded = featAdded;
+				map.addControl(drawPoint);
+				
+                 map.setCenter(posicion, 15);
+                
+            }
+            function featAdded() {
+				var el = document.getElementById("text");
+				el.value=drawPoint.handler.point.geometry.x+", "+drawPoint.handler.point.geometry.y;
+            }
+            function dibujar() {
+            	drawPoint.activate();
+            }
+            function parar() {
+		drawPoint.deactivate();
+            }
+            function seleccionar(){
+                
+            }
+
+        </script> 
+    </head> 
+    <body onload="init()"> 
+        <div id="map" style="width: 700px; height: 700px;"></div> 
+        <input type="button" value="Dibujar" onclick="dibujar()"/>
+        <input type="button" value="Parar" onclick="parar()"/>
+        Último punto: <input type="text" value="no set" id="text" width="30"/>
+        <br></br>
+        <input type="button" value="Seleccionar" onclick="seleccionar()"/>
+        
+        
+    </body> 
+</html> 
